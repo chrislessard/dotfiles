@@ -1,0 +1,14 @@
+[user]
+  name = Chris Lessard 
+  email = christian.lessard@shopify.com
+[alias]
+  st = status
+  amend-push-force = !git add . && git commit --amend --no-edit && git push origin +HEAD
+  apf = !git add . && git commit --amend --no-edit && git push origin +HEAD
+
+  rebase-on-new-main = !git checkout main && git pull && git checkout - && git rebase main
+  rnm = !git checkout main && git pull && git checkout - && git rebase main
+[include]
+	path = /Users/chrislessard/.config/dev/gitconfig
+[core]
+	editor = nvim
