@@ -2,6 +2,31 @@
 
 cd "${0%/*}"
 
+# Preparing installer
+#
+echo
+echo Preparing installer
+echo -------------------
+echo
+if [[ uname -eq "Darwin" ]] && ! command -v brew &> /dev/null; then
+  # Install homebrew
+  echo --- Installing homebrew
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  [[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
+fi
+
+function install {
+  if ! command -v name &> /dev/null; then
+    if command -v apt-get &> /dev/null; then
+      sudo apt-get install -y $1
+    elif command -v brew &> /dev/null; then
+      brew install $1
+    fi
+  fi
+  echo "--- $1 installed"
+}
+
+
 # Link dotfiles
 #
 echo
@@ -34,9 +59,7 @@ echo Install dependencies
 echo -----------------------
 echo
 
-sudo apt-get update
-
-sudo apt-get install -y neovim
+install neovim
 echo "--- Neovim installed"
 
 # Neovim
@@ -49,12 +72,15 @@ if command -v apt-get &> /dev/null; then
     fi
   fi
 fi
-sudo apt-get install -y neovim
-
+install neovim
 
 # Install Vim plug
 curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
 	https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# Install plugins
+nvim -c 'PlugInstall | qa'
+
 
 # Install FZF
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
@@ -62,7 +88,3 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 sudo rm -rf /usr/local/bin/fzf
 sudo rm -rf /usr/bin/fzf
-
-# Install plugins
-nvim -c 'PlugInstall | qa'
-
