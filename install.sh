@@ -65,6 +65,3 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 sudo rm -rf /usr/local/bin/fzf
 sudo rm -rf /usr/bin/fzf
 
-# Install plugins
-# nvim -c 'PlugInstall | qa'
-

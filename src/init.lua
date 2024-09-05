@@ -59,7 +59,7 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- fast split
 vim.keymap.set('n', '<leader>v', ':split<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>h', ':split<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>h', ':vsplit<CR>', { noremap = true, silent = true })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -300,7 +300,7 @@ vim.keymap.set('n', '<C-t>', ':Buffers<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-f>', ':Rg<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-_>', ':Ag<CR>', { noremap =true, silent = true})
 
-# Search codebase for current word
+-- search codebase for current word
 vim.keymap.set('n', '<C-f>', function()
   local word = vim.fn.expand('<cword>')  -- Get the word under the cursor
   vim.cmd('Ag ' .. word)
