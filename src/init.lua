@@ -61,14 +61,8 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<leader>v', ':split<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>h', ':vsplit<CR>', { noremap = true, silent = true })
 
--- Clear highlights on search when pressing <Esc> in normal mode
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-
--- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
 -- Simplify basic terminal control flow
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+-- vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -122,6 +116,7 @@ require('lazy').setup({
   'junegunn/fzf',
   'junegunn/fzf.vim',
   'neovim/nvim-lspconfig',
+  'NLKNguyen/papercolor-theme',
 
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
@@ -300,11 +295,29 @@ vim.keymap.set('n', '<C-t>', ':Buffers<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-f>', ':Rg<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-_>', ':Ag<CR>', { noremap =true, silent = true})
 
--- search codebase for current word
 vim.keymap.set('n', '<C-f>', function()
   local word = vim.fn.expand('<cword>')  -- Get the word under the cursor
   vim.cmd('Ag ' .. word)
 end, {silent = true, noremap = true})
+vim.opt.background = 'light'
+vim.cmd('colorscheme PaperColor')
+
+vim.g.fzf_colors = {
+    fg = {'fg', 'Normal'},
+    bg = {'bg', 'Normal'},
+    ['preview-bg'] = {'bg', 'NormalFloat'},
+    hl = {'fg', 'Comment'},
+    ['fg+'] = {'fg', 'CursorLine', 'CursorColumn', 'Normal'},
+    ['bg+'] = {'bg', 'CursorLine', 'CursorColumn'},
+    ['hl+'] = {'fg', 'Statement'},
+    info = {'fg', 'PreProc'},
+    border = {'fg', 'Ignore'},
+    prompt = {'fg', 'Conditional'},
+    pointer = {'fg', 'Exception'},
+    marker = {'fg', 'Keyword'},
+    spinner = {'fg', 'Label'},
+    header = {'fg', 'Comment'}
+}
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
