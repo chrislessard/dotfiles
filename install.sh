@@ -65,3 +65,5 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 sudo rm -rf /usr/local/bin/fzf
 sudo rm -rf /usr/bin/fzf
 
+# Trigger installation of nvim plugins
+nvim --headless +PlugInstall +qall
