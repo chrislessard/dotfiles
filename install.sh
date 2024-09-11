@@ -67,3 +67,5 @@ sudo rm -rf /usr/bin/fzf
 
 # Trigger installation of nvim plugins
 nvim --headless +PlugInstall +qall
+
+gem install ruby-lsp
