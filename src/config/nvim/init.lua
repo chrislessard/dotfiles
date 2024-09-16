@@ -116,6 +116,11 @@ vim.g.fzf_colors = {
     header = {'fg', 'Comment'}
 }
 
+-- On the latest versions of Vim/Neovim, fzf starts in a terminal buffer.
+-- This line corrects a bug with the paper color theme, whereby comments are
+-- set to a color that make them invisible.
+vim.g.terminal_color_0 = '#4e4e4e'
+
 -- LSP
 local lspconfig = require 'lspconfig'
 
