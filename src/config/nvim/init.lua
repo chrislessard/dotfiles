@@ -233,6 +233,16 @@ vim.g.splitjoin_ruby_options_as_arguments = 1
 
 -- Autocommands
 
+-- Alias output of GBrowse! to clipboard
+local function copy_browse()
+  vim.fn.setreg('"', vim.fn.execute('GBrowse!'))
+end
+
+vim.api.nvim_create_user_command("GbrowseCopy", copy_browse, {})
+
+vim.keymap.set('n', 'gb', ':GbrowseCopy<CR>', { noremap = true })
+vim.keymap.set('n', 'ogb', ':GBrowse<CR>', { noremap = true })
+
 -- Highlight when yanking text
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking text',
