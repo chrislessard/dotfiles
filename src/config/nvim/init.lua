@@ -78,13 +78,13 @@ Plug 'NLKNguyen/papercolor-theme'    -- Pretty colors
 Plug 'tpope/vim-sensible'            -- Sensible defaults
 Plug 'junegunn/fzf'                  -- Fuzzy searching
 Plug 'junegunn/fzf.vim'              -- Idem
-Plug 'github/copilot.vim'            -- Smart autocomplete
 Plug 'tpope/vim-fugitive'            -- Git commands
 Plug 'tpope/vim-rhubarb'             -- Allows visiting Github URLs
 Plug 'neovim/nvim-lspconfig'         -- LSP Support
 Plug 'airblade/vim-gitgutter'        -- Shows git diff in the gutter
 Plug 'ojroques/nvim-lspfuzzy'        -- LSP Results use FZF
 Plug 'hrsh7th/nvim-cmp'
+Plug 'github/copilot.vim'            -- Smart autocomplete
 
 -- Ruby
 Plug 'vim-ruby/vim-ruby'
@@ -151,7 +151,10 @@ local on_attach = function(client, bufnr)
 end
 
 lspconfig.ruby_lsp.setup({ on_attach = on_attach })
-lspconfig.sorbet.setup({ on_attach = on_attach })
+lspconfig.sorbet.setup({ 
+  on_attach = on_attach, 
+  cmd = { "bundle", "exec", "srb", "tc", "--lsp" },
+})
 
 -- Configure lspfuzzy
 require('lspfuzzy').setup {
@@ -231,17 +234,7 @@ vim.g.splitjoin_ruby_hanging_args = 0
 vim.g.splitjoin_ruby_curly_braces = 0
 vim.g.splitjoin_ruby_options_as_arguments = 1
 
--- Autocommands
-
--- Alias output of GBrowse! to clipboard
-local function copy_browse()
-  vim.fn.setreg('"', vim.fn.execute('GBrowse!'))
-end
-
-vim.api.nvim_create_user_command("GbrowseCopy", copy_browse, {})
-
-vim.keymap.set('n', 'gb', ':GbrowseCopy<CR>', { noremap = true })
-vim.keymap.set('n', 'ogb', ':GBrowse<CR>', { noremap = true })
+-- Commands 
 
 -- Highlight when yanking text
 vim.api.nvim_create_autocmd('TextYankPost', {
@@ -263,4 +256,35 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end
   end,
 })
+
+-- Normal mode: returns the current line number
+-- Visual mode: returns the range of lines
+local function get_line_range()
+  local mode = vim.fn.visualmode()
+  if mode ~= '' then
+    return string.format("%d,%d", vim.fn.line("'<"), vim.fn.line("'>"))
+  end
+  return tostring(vim.fn.line("."))
+end
+
+-- Open a link to the current line(s) in the browser
+local function open_gbrowse()
+  local range = get_line_range()
+  local cmd = string.format(":%sGBrowse", range)
+  vim.cmd(cmd)
+end
+
+-- Open a link to the current line(s) in the browser
+vim.keymap.set('n', 'ogb', open_gbrowse, { noremap = true })
+vim.keymap.set('v', 'ogb', open_gbrowse, { noremap = true })
+
+-- Copy a link to the current line(s) in the browser
+local function copy_browse()
+  local cmd = string.format(":%sGBrowse!", get_line_range())
+  vim.fn.setreg('"', vim.fn.execute(cmd))
+end
+
+-- user_command gives visual feedback 
+vim.api.nvim_create_user_command("GBrowseCopy", copy_browse, {})
+vim.keymap.set('n', 'gb', ':GbrowseCopy<CR>', { noremap = true })
 
