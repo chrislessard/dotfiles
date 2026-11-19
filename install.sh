@@ -1,71 +1,84 @@
-#! /bin/zsh
+#!/bin/bash
+set -euo pipefail
 
-cd "${0%/*}"
-
-# Link dotfiles
-#
-echo
-echo Linking dotfiles
-echo ----------------
-echo
-for dotfile in src/**/*; do
-    # Iterate through each file/dir in src, and link it in the local env
-    destination=~/.${dotfile:4} # Remove src/ and prepend ~/.
-
-    # If entry is a directory, create it as such
-    if [ -d "$dotfile" ] && [ ! -d "$destination" ]; then
-        mkdir $destination
-    fi
-
-    # If entry is a file, create it as such
-    if [ -f "$dotfile" ]; then
-        echo "--- $dotfile -> $destination"
-        ln -sf ${dotfile:P} "$destination"
-    fi
-done
-
-echo "Setting up vimrc for Neovim"
-mkdir -p ~/.config/nvim
-ln -s ~/.init.lua ~/.config/nvim/init.lua
-
-# Install dependencies
-echo
-echo Install dependencies
-echo -----------------------
-echo
-
-sudo apt-get update
-
-sudo apt-get install -y neovim
-echo "--- Neovim installed"
-
-# Neovim
-if command -v apt-get &> /dev/null; then
-  # Uninstall any old version of neovim which was installed from the wrong
-  # repository
-  if command -v nvim &> /dev/null; then
-    if [[ $(nvim -v | grep -oP "(?<=NVIM v)\d+\.\d+") -lt 0.7 ]]; then
-      sudo apt-get remove -y neovim neovim-runtime
-    fi
-  fi
+if [[ "$(uname -s)" != Darwin ]]; then
+  echo 'This installer targets macOS.' >&2
+  exit 1
 fi
-sudo apt-get install -y neovim
 
-# Install Vim plug
-curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-	https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-# Install AG
-sudo apt-get install silversearcher-ag
+find_brew() {
+  local path
+  for path in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ -x "$path" ]]; then
+      printf '%s\n' "$path"
+      return
+    fi
+  done
+  type -P brew
+}
 
-# Install FZF
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-~/.fzf/install --key-bindings --update-rc
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-sudo rm -rf /usr/local/bin/fzf
-sudo rm -rf /usr/bin/fzf
+if ! brew_bin="$(find_brew)"; then
+  echo 'Installing Homebrew. Its installer may ask for your password.'
+  brew_installer="$(mktemp)"
+  trap 'rm -f "$brew_installer"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$brew_installer"
+  /bin/bash "$brew_installer"
+  brew_bin="$(find_brew)"
+fi
 
-# Trigger installation of nvim plugins
-nvim --headless +PlugInstall +qall
+eval "$("$brew_bin" shellenv bash)"
+"$brew_bin" install neovim tmux fzf ripgrep bat jq node
+"$brew_bin" install --cask font-meslo-lg-nerd-font
 
-gem install ruby-lsp
+nvim="$("$brew_bin" --prefix)/bin/nvim"
+if ! "$nvim" --clean --headless '+if !has("nvim-0.11.3") | cquit | endif' +qa; then
+  echo 'Neovim 0.11.3 or newer is required. Run brew upgrade neovim and try again.' >&2
+  exit 1
+fi
+
+link_config() {
+  local source="$1" destination="$2" backup
+  mkdir -p "$(dirname "$destination")"
+  if [[ -L "$destination" && "$(readlink "$destination")" == "$source" ]]; then
+    return
+  fi
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    backup="$(mktemp -d "$destination.backup.XXXXXXXX")"
+    mv "$destination" "$backup/"
+    echo "Backed up $destination to $backup/"
+  fi
+  ln -s "$source" "$destination"
+}
+
+link_config "$repo/src/config/alacritty" "$config_home/alacritty"
+if ! defaults read org.alacritty AppleFontSmoothing >/dev/null 2>&1; then
+  defaults write org.alacritty AppleFontSmoothing -int 2
+fi
+link_config "$repo/src/config/nvim" "$config_home/nvim"
+link_config "$repo/src/tmux.conf" "$HOME/.tmux.conf"
+
+plug="$data_home/nvim/site/autoload/plug.vim"
+if [[ ! -s "$plug" ]]; then
+  curl -fsSL --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/0.14.0/plug.vim -o "$plug"
+fi
+
+unset NVIM_APPNAME
+"$nvim" --headless --cmd 'let g:dotfiles_installing = 1' '+PlugInstall --sync' \
+  '+lua for name, plug in pairs(vim.g.plugs) do if vim.fn.isdirectory(plug.dir) == 0 then print("Failed to install " .. name); vim.cmd("cquit") end end' +qa
+"$nvim" --headless '+if v:errmsg != "" | cquit | endif' +qa
+
+if [[ "${SHELL:-/bin/zsh}" == */zsh ]]; then
+  zprofile="${ZDOTDIR:-$HOME}/.zprofile"
+  mkdir -p "$(dirname "$zprofile")"
+  if ! grep -Fqs -- "$brew_bin shellenv" "$zprofile"; then
+    printf '\n# Homebrew\neval "$(%q shellenv zsh)"\n' "$brew_bin" >> "$zprofile"
+  fi
+else
+  printf 'Set up Homebrew in your login shell with %s shellenv.\n' "$brew_bin"
+fi
+
+echo 'Done. Relaunch Alacritty, then run tmux or nvim.'

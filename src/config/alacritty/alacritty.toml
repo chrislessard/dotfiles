@@ -1,0 +1,50 @@
+[general]
+import = ["catppuccin-latte.toml"]
+
+[window]
+padding = { x = 4, y = 4 }
+
+[font]
+size = 12
+
+[font.offset]
+x = 0
+y = 2
+
+[font.glyph_offset]
+x = 0
+y = 1
+
+[font.normal]
+family = "MesloLGS Nerd Font Mono"
+style = "Regular"
+
+[font.bold]
+family = "MesloLGS Nerd Font Mono"
+style = "Bold"
+
+[font.italic]
+family = "MesloLGS Nerd Font Mono"
+style = "Italic"
+
+[font.bold_italic]
+family = "MesloLGS Nerd Font Mono"
+style = "Bold Italic"
+
+[keyboard]
+bindings = [
+  # Force CSI-u Shift+Return
+  { key = "Enter", mods = "Shift", chars = "\u001b[13;2u" },
+  # Force CSI-u Ctrl+.
+  { key = ".", mods = "Control", chars = "\u001b[46;5u" },
+]
+
+[selection]
+save_to_clipboard = true
+
+# No yellow: Latte's amber is unreadable on the light background
+[colors.normal]
+yellow = "#8839ef"
+
+[colors.bright]
+yellow = "#8839ef"
